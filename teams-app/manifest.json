@@ -6,9 +6,9 @@
   "packageName": "com.spaceflow.app",
   "developer": {
     "name": "SpaceFlow",
-    "websiteUrl": "https://project-mh4zv.vercel.app",
-    "privacyUrl": "https://project-mh4zv.vercel.app",
-    "termsOfUseUrl": "https://project-mh4zv.vercel.app"
+    "websiteUrl": "https://cad.spaceaiapp.com/lean",
+    "privacyUrl": "https://cad.spaceaiapp.com/lean",
+    "termsOfUseUrl": "https://cad.spaceaiapp.com/lean"
   },
   "name": {
     "short": "SpaceFlow",
@@ -27,12 +27,12 @@
     {
       "entityId": "spaceflow",
       "name": "SpaceFlow",
-      "contentUrl": "https://project-mh4zv.vercel.app",
-      "websiteUrl": "https://project-mh4zv.vercel.app",
+      "contentUrl": "https://cad.spaceaiapp.com/lean",
+      "websiteUrl": "https://cad.spaceaiapp.com/lean",
       "scopes": ["personal"]
     }
   ],
   "validDomains": [
-    "project-mh4zv.vercel.app"
+    "cad.spaceaiapp.com/lean"
   ]
 }
