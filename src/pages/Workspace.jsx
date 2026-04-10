@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import CalendarView from '../components/CalendarView'
+import ChatView from '../components/ChatView'
 import CreateTaskModal from '../components/CreateTaskModal'
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal'
 import KanbanBoard from '../components/KanbanBoard'
@@ -13,15 +14,14 @@ import {
   fetchTasks,
   updateTaskStatus as syncTaskStatus,
 } from '../services/api'
-import { openTaskQueryInTeamsChat } from '../services/teamsChat'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
 
 const tabItems = [
   { id: 'tasks', label: 'Tasks' },
   { id: 'calendar', label: 'Calendar' },
   { id: 'timeline', label: 'Timeline' },
+  { id: 'chat', label: 'Chat' },
 ]
-const DEFAULT_TASK_QUERY = 'Can you review this task and share guidance on blockers?'
 
 function Workspace() {
   const navigate = useNavigate()
@@ -106,6 +106,11 @@ function Workspace() {
       : null
   }, [selectedTaskId, workspaceTasks])
 
+  const selectedTask = useMemo(
+    () => workspaceTasks.find((task) => task.id === highlightedTaskId) ?? null,
+    [highlightedTaskId, workspaceTasks],
+  )
+
   const tasksByStatus = TASK_STATUS_ORDER.reduce((result, status) => {
     result[status] = activeWorkspace?.id
       ? getTasksByStatus(activeWorkspace.id, status)
@@ -121,7 +126,7 @@ function Workspace() {
   const handleTabChange = (nextTab) => {
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', nextTab)
-    if (nextTab !== 'tasks') {
+    if (nextTab !== 'tasks' && nextTab !== 'chat') {
       nextParams.delete('task')
     }
     setSearchParams(nextParams)
@@ -138,22 +143,15 @@ function Workspace() {
     await syncTaskStatus(taskId, nextStatus)
   }
 
-  const handleTaskChatRequest = async (task) => {
+  const handleTaskChatRequest = (task) => {
     if (!activeWorkspace?.id || !task) {
       return
     }
 
     const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('tab', 'tasks')
+    nextParams.set('tab', 'chat')
     nextParams.set('task', task.id)
     setSearchParams(nextParams)
-
-    await openTaskQueryInTeamsChat({
-      task,
-      query: DEFAULT_TASK_QUERY,
-      workspaceId: activeWorkspace.id,
-      workspaceName: activeWorkspace.name,
-    })
   }
 
   const handleCreateWorkspace = async (workspaceInput) => {
@@ -245,6 +243,9 @@ function Workspace() {
 
             {activeTab === 'calendar' ? <CalendarView tasks={workspaceTasks} /> : null}
             {activeTab === 'timeline' ? <TimelineView tasks={workspaceTasks} /> : null}
+            {activeTab === 'chat' ? (
+              <ChatView task={selectedTask} workspaceName={activeWorkspace?.name} />
+            ) : null}
           </section>
         </section>
       </div>
