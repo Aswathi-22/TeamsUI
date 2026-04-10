@@ -5,6 +5,7 @@ import ChatView from '../components/ChatView'
 import CreateTaskModal from '../components/CreateTaskModal'
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal'
 import KanbanBoard from '../components/KanbanBoard'
+import ThemeToggle from '../components/ThemeToggle'
 import TimelineView from '../components/TimelineView'
 import { TASK_STATUS_ORDER } from '../constants/taskStatus'
 import {
@@ -183,11 +184,10 @@ function Workspace() {
                   key={workspace.id}
                   type="button"
                   onClick={() => handleWorkspaceChange(workspace.id)}
-                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                    isActive
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${isActive
                       ? 'border-teal-400/55 bg-teal-500/12 text-teal-100'
                       : 'border-slate-700/70 bg-slate-900/60 text-slate-300 hover:border-slate-500/80 hover:text-slate-100'
-                  }`}
+                    }`}
                 >
                   <p className="font-display text-base">{workspace.name}</p>
                   <p className="mt-1 text-xs text-slate-400">{workspace.description}</p>
@@ -207,6 +207,7 @@ function Workspace() {
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">{activeWorkspace?.description}</p>
               </div>
+              <ThemeToggle />
             </div>
 
             <nav className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-2">
@@ -217,11 +218,10 @@ function Workspace() {
                     key={tabItem.id}
                     type="button"
                     onClick={() => handleTabChange(tabItem.id)}
-                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-                      isActive
+                    className={`rounded-xl px-4 py-2 text-sm font-medium transition ${isActive
                         ? 'bg-teal-500/20 text-teal-100 shadow-inner shadow-teal-500/15'
                         : 'text-slate-400 hover:text-slate-100'
-                    }`}
+                      }`}
                   >
                     {tabItem.label}
                   </button>
