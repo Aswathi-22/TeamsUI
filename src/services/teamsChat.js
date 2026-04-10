@@ -1,9 +1,6 @@
 const DEFAULT_APP_ID = 'c1a9b8f2-7d4e-4a8b-9c1f-123456789abc'
 const DEFAULT_ENTITY_ID = 'spaceflow'
 const DEFAULT_APP_BASE_URL = 'https://project-mh4zv.vercel.app'
-const RECIPIENT_STORAGE_KEY = 'spaceflow.chatRecipients'
-const DEFAULT_RECIPIENT_PROMPT =
-  'Enter team lead/manager email(s), comma-separated (for example: lead@company.com):'
 
 let teamsSdkPromise = null
 
@@ -20,60 +17,9 @@ const getAppBaseUrl = () => {
   return DEFAULT_APP_BASE_URL
 }
 
-const parseLeadUsers = (usersConfig) =>
-  `${usersConfig ?? ''}`
-    .split(',')
-    .map((user) => user.trim())
-    .filter(Boolean)
-
-const readStoredRecipients = () => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return []
-  }
-
-  return parseLeadUsers(window.localStorage.getItem(RECIPIENT_STORAGE_KEY))
-}
-
-const writeStoredRecipients = (recipients) => {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return
-  }
-
-  window.localStorage.setItem(RECIPIENT_STORAGE_KEY, recipients.join(','))
-}
-
-const resolveRecipients = () => {
-  const configuredUsers = parseLeadUsers(import.meta.env.VITE_TEAMS_LEAD_USERS)
-  if (configuredUsers.length > 0) {
-    return configuredUsers
-  }
-
-  const storedUsers = readStoredRecipients()
-  if (storedUsers.length > 0) {
-    return storedUsers
-  }
-
-  if (typeof window === 'undefined') {
-    return []
-  }
-
-  const promptedUsers = window.prompt(DEFAULT_RECIPIENT_PROMPT, '')
-  if (promptedUsers === null) {
-    return null
-  }
-
-  const parsedRecipients = parseLeadUsers(promptedUsers)
-  if (parsedRecipients.length > 0) {
-    writeStoredRecipients(parsedRecipients)
-  }
-
-  return parsedRecipients
-}
-
-const buildTeamsChatDeepLink = ({ users, topicName, message, tenantId }) => {
+const buildTeamsBotChatDeepLink = ({ botId, message, tenantId }) => {
   const query = new URLSearchParams({
-    users: users.join(','),
-    topicName,
+    users: `28:${botId}`,
     message,
   })
 
@@ -82,6 +28,26 @@ const buildTeamsChatDeepLink = ({ users, topicName, message, tenantId }) => {
   }
 
   return `https://teams.microsoft.com/l/chat/0/0?${query.toString()}`
+}
+
+const buildTeamsAppConversationDeepLink = ({ tenantId }) => {
+  const appId = import.meta.env.VITE_TEAMS_APP_ID ?? DEFAULT_APP_ID
+  const query = new URLSearchParams()
+
+  if (tenantId) {
+    query.set('tenantId', tenantId)
+  }
+
+  const queryString = query.toString()
+  const encodedAppId = encodeURIComponent(appId)
+  return queryString
+    ? `https://teams.microsoft.com/l/entity/${encodedAppId}/conversations?${queryString}`
+    : `https://teams.microsoft.com/l/entity/${encodedAppId}/conversations`
+}
+
+const resolveBotId = () => {
+  const configuredBotId = `${import.meta.env.VITE_TEAMS_BOT_ID ?? ''}`.trim()
+  return configuredBotId || null
 }
 
 export const buildTaskEntityDeepLink = ({ workspaceId, taskId, taskTitle }) => {
@@ -113,7 +79,7 @@ const buildChatMessage = ({ taskTitle, workspaceName, query, taskDeepLink }) =>
   [
     `Task query: ${taskTitle}`,
     workspaceName ? `Workspace: ${workspaceName}` : null,
-    `Question: ${query}`,
+    query ? `Question: ${query}` : null,
     `Open in SpaceFlow: ${taskDeepLink}`,
   ]
     .filter(Boolean)
@@ -157,26 +123,18 @@ const loadTeamsSdk = async () => {
   return teamsSdkPromise
 }
 
-const openUsingTeamsSdk = async ({ recipients, topicName, message, chatDeepLink }) => {
+const openUsingTeamsSdk = async ({ botRecipient, message, chatDeepLink }) => {
   const teamsSdk = await loadTeamsSdk()
   if (!teamsSdk) {
     return false
   }
 
   try {
-    if (teamsSdk.chat?.isSupported()) {
-      if (recipients.length === 1) {
-        await teamsSdk.chat.openChat({
-          user: recipients[0],
-          message,
-        })
-      } else {
-        await teamsSdk.chat.openGroupChat({
-          users: recipients,
-          topic: topicName,
-          message,
-        })
-      }
+    if (botRecipient && message && teamsSdk.chat?.isSupported()) {
+      await teamsSdk.chat.openChat({
+        user: botRecipient,
+        message,
+      })
       return true
     }
   } catch {
@@ -206,20 +164,8 @@ export const openTaskQueryInTeamsChat = async ({
   }
 
   const normalizedQuery = `${query ?? ''}`.trim()
-  if (!task?.id || !workspaceId || !normalizedQuery) {
+  if (!task?.id || !workspaceId) {
     return null
-  }
-
-  const recipients = resolveRecipients()
-  if (recipients === null) {
-    return { status: 'cancelled' }
-  }
-
-  if (recipients.length === 0) {
-    window.alert(
-      'Add at least one manager email. Set VITE_TEAMS_LEAD_USERS or enter recipients when prompted.',
-    )
-    return { status: 'missing-recipients' }
   }
 
   const taskDeepLink = buildTaskEntityDeepLink({
@@ -234,20 +180,20 @@ export const openTaskQueryInTeamsChat = async ({
     query: normalizedQuery,
     taskDeepLink,
   })
-  const topicName = `Task Query: ${task.title ?? 'Task'}`
   const tenantId = import.meta.env.VITE_TEAMS_TENANT_ID
+  const botId = resolveBotId()
 
-  const chatDeepLink = buildTeamsChatDeepLink({
-    users: recipients,
-    topicName,
-    message: chatMessage,
-    tenantId,
-  })
+  const chatDeepLink = botId
+    ? buildTeamsBotChatDeepLink({
+        botId,
+        message: chatMessage,
+        tenantId,
+      })
+    : buildTeamsAppConversationDeepLink({ tenantId })
 
   const openedInTeams = await openUsingTeamsSdk({
-    recipients,
-    topicName,
-    message: chatMessage,
+    botRecipient: botId ? `28:${botId}` : null,
+    message: botId ? chatMessage : null,
     chatDeepLink,
   })
 
@@ -265,7 +211,8 @@ export const openTaskQueryInTeamsChat = async ({
 
   return {
     status: 'opened',
-    recipients,
+    mode: botId ? 'bot-chat' : 'app-conversation',
+    botId,
     chatDeepLink,
     taskDeepLink,
   }

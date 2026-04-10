@@ -143,20 +143,6 @@ function Workspace() {
       return
     }
 
-    const question = window.prompt(
-      'Ask your team lead or manager about this task:',
-      DEFAULT_TASK_QUERY,
-    )
-
-    if (question === null) {
-      return
-    }
-
-    const trimmedQuestion = question.trim()
-    if (!trimmedQuestion) {
-      return
-    }
-
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', 'tasks')
     nextParams.set('task', task.id)
@@ -164,7 +150,7 @@ function Workspace() {
 
     await openTaskQueryInTeamsChat({
       task,
-      query: trimmedQuestion,
+      query: DEFAULT_TASK_QUERY,
       workspaceId: activeWorkspace.id,
       workspaceName: activeWorkspace.name,
     })
@@ -189,13 +175,6 @@ function Workspace() {
                 Tasks, calendar, and timeline scoped by workspace.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsCreateWorkspaceModalOpen(true)}
-              className="rounded-xl border border-slate-600/80 bg-slate-800/80 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-cyan-400/60 hover:text-cyan-100"
-            >
-              + Create Workspace
-            </button>
           </div>
 
           <div className="mt-5 space-y-2">
@@ -230,14 +209,6 @@ function Workspace() {
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">{activeWorkspace?.description}</p>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIsCreateTaskModalOpen(true)}
-                className="rounded-xl bg-gradient-to-r from-teal-400 to-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:brightness-110"
-              >
-                + Create Task
-              </button>
             </div>
 
             <nav className="mt-5 flex flex-wrap gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-2">
