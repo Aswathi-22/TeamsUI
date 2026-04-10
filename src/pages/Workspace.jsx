@@ -138,7 +138,7 @@ function Workspace() {
     await syncTaskStatus(taskId, nextStatus)
   }
 
-  const handleTaskChatRequest = (task) => {
+  const handleTaskChatRequest = async (task) => {
     if (!activeWorkspace?.id || !task) {
       return
     }
@@ -162,7 +162,7 @@ function Workspace() {
     nextParams.set('task', task.id)
     setSearchParams(nextParams)
 
-    openTaskQueryInTeamsChat({
+    await openTaskQueryInTeamsChat({
       task,
       query: trimmedQuestion,
       workspaceId: activeWorkspace.id,
