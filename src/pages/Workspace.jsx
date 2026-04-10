@@ -13,6 +13,7 @@ import {
   fetchTasks,
   updateTaskStatus as syncTaskStatus,
 } from '../services/api'
+import { openTaskQueryInTeamsChat } from '../services/teamsChat'
 import { useWorkspaceStore } from '../store/useWorkspaceStore'
 
 const tabItems = [
@@ -20,6 +21,7 @@ const tabItems = [
   { id: 'calendar', label: 'Calendar' },
   { id: 'timeline', label: 'Timeline' },
 ]
+const DEFAULT_TASK_QUERY = 'Can you review this task and share guidance on blockers?'
 
 function Workspace() {
   const navigate = useNavigate()
@@ -36,6 +38,7 @@ function Workspace() {
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace)
 
   const rawTab = searchParams.get('tab')
+  const selectedTaskId = searchParams.get('task')?.trim() ?? ''
   const activeTab = tabItems.some((tabItem) => tabItem.id === rawTab)
     ? rawTab
     : 'tasks'
@@ -93,6 +96,16 @@ function Workspace() {
     [workspaceTasks],
   )
 
+  const highlightedTaskId = useMemo(() => {
+    if (!selectedTaskId) {
+      return null
+    }
+
+    return workspaceTasks.some((task) => task.id === selectedTaskId)
+      ? selectedTaskId
+      : null
+  }, [selectedTaskId, workspaceTasks])
+
   const tasksByStatus = TASK_STATUS_ORDER.reduce((result, status) => {
     result[status] = activeWorkspace?.id
       ? getTasksByStatus(activeWorkspace.id, status)
@@ -106,7 +119,12 @@ function Workspace() {
   }
 
   const handleTabChange = (nextTab) => {
-    setSearchParams({ tab: nextTab })
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', nextTab)
+    if (nextTab !== 'tasks') {
+      nextParams.delete('task')
+    }
+    setSearchParams(nextParams)
   }
 
   const handleCreateTask = async (taskInput) => {
@@ -118,6 +136,38 @@ function Workspace() {
 
   const handleTaskStatusChange = async (taskId, nextStatus) => {
     await syncTaskStatus(taskId, nextStatus)
+  }
+
+  const handleTaskChatRequest = (task) => {
+    if (!activeWorkspace?.id || !task) {
+      return
+    }
+
+    const question = window.prompt(
+      'Ask your team lead or manager about this task:',
+      DEFAULT_TASK_QUERY,
+    )
+
+    if (question === null) {
+      return
+    }
+
+    const trimmedQuestion = question.trim()
+    if (!trimmedQuestion) {
+      return
+    }
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set('tab', 'tasks')
+    nextParams.set('task', task.id)
+    setSearchParams(nextParams)
+
+    openTaskQueryInTeamsChat({
+      task,
+      query: trimmedQuestion,
+      workspaceId: activeWorkspace.id,
+      workspaceName: activeWorkspace.name,
+    })
   }
 
   const handleCreateWorkspace = async (workspaceInput) => {
@@ -217,6 +267,8 @@ function Workspace() {
                 tasksByStatus={tasksByStatus}
                 dependencyTitleMap={dependencyTitleMap}
                 onTaskStatusChange={handleTaskStatusChange}
+                highlightedTaskId={highlightedTaskId}
+                onTaskChatRequest={handleTaskChatRequest}
               />
             ) : null}
 

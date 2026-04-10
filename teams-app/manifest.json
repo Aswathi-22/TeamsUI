@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "c1a9b8f2-7d4e-4a8b-9c1f-123456789abc",
+  "packageName": "com.spaceflow.app",
+  "developer": {
+    "name": "SpaceFlow",
+    "websiteUrl": "https://project-mh4zv.vercel.app",
+    "privacyUrl": "https://project-mh4zv.vercel.app",
+    "termsOfUseUrl": "https://project-mh4zv.vercel.app"
+  },
+  "name": {
+    "short": "SpaceFlow",
+    "full": "SpaceFlow Project Management"
+  },
+  "description": {
+    "short": "Manage projects inside Teams",
+    "full": "SpaceFlow allows managing tasks, timelines, and workspaces inside Microsoft Teams"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0f172a",
+  "staticTabs": [
+    {
+      "entityId": "spaceflow",
+      "name": "SpaceFlow",
+      "contentUrl": "https://project-mh4zv.vercel.app",
+      "websiteUrl": "https://project-mh4zv.vercel.app",
+      "scopes": ["personal"]
+    }
+  ],
+  "validDomains": [
+    "project-mh4zv.vercel.app"
+  ]
+}

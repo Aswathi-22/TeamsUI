@@ -63,7 +63,12 @@ const resolveDropStatus = (over) => {
   return getStatusFromDropId(over.id)
 }
 
-function DraggableTaskCard({ task, dependencyTitles }) {
+function DraggableTaskCard({
+  task,
+  dependencyTitles,
+  isHighlighted = false,
+  onTaskChatRequest,
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useDraggable({
       id: task.id,
@@ -89,12 +94,23 @@ function DraggableTaskCard({ task, dependencyTitles }) {
         isDragging ? 'opacity-35' : 'opacity-100'
       }`}
     >
-      <TaskCard task={task} dependencyTitles={dependencyTitles} />
+      <TaskCard
+        task={task}
+        dependencyTitles={dependencyTitles}
+        isHighlighted={isHighlighted}
+        onAskInChat={onTaskChatRequest}
+      />
     </div>
   )
 }
 
-function StatusColumn({ status, tasks, dependencyTitleMap }) {
+function StatusColumn({
+  status,
+  tasks,
+  dependencyTitleMap,
+  highlightedTaskId,
+  onTaskChatRequest,
+}) {
   const { isOver, setNodeRef } = useDroppable({
     id: getColumnDropId(status),
     data: {
@@ -108,37 +124,39 @@ function StatusColumn({ status, tasks, dependencyTitleMap }) {
   return (
     <section
       ref={setNodeRef}
-      className={`rounded-2xl border bg-slate-900/60 p-3 transition duration-200 md:p-4 ${
+      className={`rounded-xl border bg-slate-900/60 p-2.5 transition duration-200 md:p-3 ${
         isOver
           ? 'border-cyan-300/70 shadow-[0_0_0_1px_rgba(34,211,238,0.45)]'
           : 'border-slate-700/70'
       }`}
     >
-      <header className="mb-3 flex items-center justify-between">
+      <header className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${tone.accent}`} />
-          <h3 className="font-display text-lg text-slate-50">
+          <span className={`h-2 w-2 rounded-full ${tone.accent}`} />
+          <h3 className="font-display text-base text-slate-50">
             {TASK_STATUS_META[status]?.label ?? 'Backlog'}
           </h3>
         </div>
-        <span className={`rounded-full border px-2 py-1 text-xs ${tone.chip}`}>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] ${tone.chip}`}>
           {tasks.length}
         </span>
       </header>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {tasks.length > 0 ? (
           tasks.map((task) => (
             <DraggableTaskCard
               key={task.id}
               task={task}
+              isHighlighted={task.id === highlightedTaskId}
+              onTaskChatRequest={onTaskChatRequest}
               dependencyTitles={task.dependencies
                 .map((dependencyId) => dependencyTitleMap.get(dependencyId))
                 .filter(Boolean)}
             />
           ))
         ) : (
-          <p className="rounded-xl border border-dashed border-slate-700/80 p-4 text-sm text-slate-500">
+          <p className="rounded-lg border border-dashed border-slate-700/80 p-3 text-xs text-slate-500">
             Drop tasks here.
           </p>
         )}
@@ -147,7 +165,13 @@ function StatusColumn({ status, tasks, dependencyTitleMap }) {
   )
 }
 
-function KanbanBoard({ tasksByStatus, dependencyTitleMap, onTaskStatusChange }) {
+function KanbanBoard({
+  tasksByStatus,
+  dependencyTitleMap,
+  onTaskStatusChange,
+  highlightedTaskId,
+  onTaskChatRequest,
+}) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -202,20 +226,22 @@ function KanbanBoard({ tasksByStatus, dependencyTitleMap, onTaskStatusChange }) 
       onDragCancel={handleDragCancel}
       onDragEnd={handleDragEnd}
     >
-      <div className="animate-fadeIn grid gap-4 xl:grid-cols-4 md:grid-cols-2">
+      <div className="animate-fadeIn grid gap-3.5 xl:grid-cols-4 md:grid-cols-2">
         {TASK_STATUS_ORDER.map((status) => (
           <StatusColumn
             key={status}
             status={status}
             tasks={tasksByStatus[status] ?? []}
             dependencyTitleMap={dependencyTitleMap}
+            highlightedTaskId={highlightedTaskId}
+            onTaskChatRequest={onTaskChatRequest}
           />
         ))}
       </div>
 
       <DragOverlay>
         {activeTask ? (
-          <div className="w-[320px] rotate-[1.2deg] opacity-95">
+          <div className="w-[280px] rotate-[1.2deg] opacity-95">
             <TaskCard
               task={activeTask}
               dependencyTitles={activeTask.dependencies
