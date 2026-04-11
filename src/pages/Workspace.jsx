@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import CalendarView from '../components/CalendarView'
-import ChatView from '../components/ChatView'
+import ChatTab from '../components/ChatTab'
 import CreateTaskModal from '../components/CreateTaskModal'
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal'
 import KanbanBoard from '../components/KanbanBoard'
@@ -38,6 +38,9 @@ function Workspace() {
   const activeWorkspaceId = useWorkspaceStore((state) => state.activeWorkspaceId)
   const getTasksByStatus = useWorkspaceStore((state) => state.getTasksByStatus)
   const setActiveWorkspace = useWorkspaceStore((state) => state.setActiveWorkspace)
+  const selectedTask = useWorkspaceStore((state) => state.selectedTask)
+  const setSelectedTask = useWorkspaceStore((state) => state.setSelectedTask)
+  const clearSelectedTask = useWorkspaceStore((state) => state.clearSelectedTask)
 
   const rawTab = searchParams.get('tab')
   const selectedTaskId = searchParams.get('task')?.trim() ?? ''
@@ -108,10 +111,30 @@ function Workspace() {
       : null
   }, [selectedTaskId, workspaceTasks])
 
-  const selectedTask = useMemo(
+  const taskFromQuery = useMemo(
     () => workspaceTasks.find((task) => task.id === highlightedTaskId) ?? null,
     [highlightedTaskId, workspaceTasks],
   )
+
+  useEffect(() => {
+    if (taskFromQuery) {
+      setSelectedTask(taskFromQuery)
+      return
+    }
+
+    if (
+      selectedTask?.id &&
+      !workspaceTasks.some((task) => task.id === selectedTask.id)
+    ) {
+      clearSelectedTask()
+    }
+  }, [
+    clearSelectedTask,
+    selectedTask?.id,
+    setSelectedTask,
+    taskFromQuery,
+    workspaceTasks,
+  ])
 
   const tasksByStatus = TASK_STATUS_ORDER.reduce((result, status) => {
     result[status] = activeWorkspace?.id
@@ -150,6 +173,7 @@ function Workspace() {
       return
     }
 
+    setSelectedTask(task)
     const nextParams = new URLSearchParams(searchParams)
     nextParams.set('tab', 'chat')
     nextParams.set('task', task.id)
@@ -163,8 +187,8 @@ function Workspace() {
 
   return (
     <main className="min-h-screen p-4 md:p-6">
-      <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-6 lg:flex-row">
-        <aside className="glass-panel flex w-full flex-col rounded-3xl border border-slate-700/70 p-5 lg:w-[290px] lg:self-start">
+      <div className="workspace-shell mx-auto flex w-full max-w-[1460px] flex-col gap-6 lg:flex-row">
+        <aside className="workspace-sidebar glass-panel flex w-full flex-col rounded-3xl border border-slate-700/70 p-5 lg:w-[290px] lg:self-start">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-teal-300">
@@ -199,7 +223,7 @@ function Workspace() {
         </aside>
 
         <section className="w-full space-y-4">
-          <header className="glass-panel rounded-3xl border border-slate-700/70 p-5">
+          <header className="workspace-header glass-panel rounded-3xl border border-slate-700/70 p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">Active Workspace</p>
@@ -231,7 +255,7 @@ function Workspace() {
             </nav>
           </header>
 
-          <section className="rounded-3xl border border-slate-700/70 bg-slate-900/45 p-4 md:p-5">
+          <section className="workspace-content rounded-3xl border border-slate-700/70 bg-slate-900/45 p-4 md:p-5">
             {activeTab === 'tasks' ? (
               <div className="space-y-5">
                 <KanbanBoard
@@ -248,7 +272,7 @@ function Workspace() {
             {activeTab === 'calendar' ? <CalendarView tasks={workspaceTasks} /> : null}
             {activeTab === 'timeline' ? <TimelineView tasks={workspaceTasks} /> : null}
             {activeTab === 'chat' ? (
-              <ChatView task={selectedTask} workspaceName={activeWorkspace?.name} />
+              <ChatTab workspaceName={activeWorkspace?.name} />
             ) : null}
           </section>
         </section>

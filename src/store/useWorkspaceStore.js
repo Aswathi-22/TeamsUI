@@ -37,6 +37,7 @@ export const useWorkspaceStore = create((set, get) => ({
     status: normalizeTaskStatus(task.status),
   })),
   activeWorkspaceId: mockWorkspaces[0]?.id ?? null,
+  selectedTask: null,
 
   addWorkspace: (workspaceInput) =>
     set((state) => {
@@ -66,6 +67,18 @@ export const useWorkspaceStore = create((set, get) => ({
 
   setActiveWorkspace: (workspaceId) => set({ activeWorkspaceId: workspaceId }),
   setActiveWorkspaceId: (workspaceId) => set({ activeWorkspaceId: workspaceId }),
+  setSelectedTask: (task) =>
+    set({
+      selectedTask: task
+        ? {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+          }
+        : null,
+    }),
+  clearSelectedTask: () => set({ selectedTask: null }),
 
   addTask: (taskInput) =>
     set((state) => {

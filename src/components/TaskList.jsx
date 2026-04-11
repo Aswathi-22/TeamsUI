@@ -24,6 +24,39 @@ const normalizeTask = (task, index) => {
   }
 }
 
+const tryParseJsonString = (value) => {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
+}
+
+const extractTasksFromPayload = (payload) => {
+  const parsedSnapshot = tryParseJsonString(payload?.snapshot)
+  const parsedData = tryParseJsonString(payload?.data)
+
+  const candidateCollections = [
+    payload?.snapshot?.tasks,
+    parsedSnapshot?.tasks,
+    payload?.data?.snapshot?.tasks,
+    payload?.data?.tasks,
+    parsedData?.snapshot?.tasks,
+    parsedData?.tasks,
+    payload?.tasks,
+  ]
+
+  const tasks = candidateCollections.find((collection) =>
+    Array.isArray(collection),
+  )
+
+  return Array.isArray(tasks) ? tasks : []
+}
+
 const fetchSpaceLeanTasks = async (signal) => {
   const response = await fetch(SPACE_LEAN_TASKS_URL, {
     method: 'GET',
@@ -38,11 +71,7 @@ const fetchSpaceLeanTasks = async (signal) => {
   }
 
   const payload = await response.json()
-  const tasks = payload?.snapshot?.tasks
-
-  if (!Array.isArray(tasks)) {
-    throw new Error('Invalid response format: snapshot.tasks is missing.')
-  }
+  const tasks = extractTasksFromPayload(payload)
 
   return tasks.map(normalizeTask)
 }

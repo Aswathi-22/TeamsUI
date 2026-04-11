@@ -126,7 +126,7 @@ function TaskCard({
               onAskInChat(task)
             }}
             className="shrink-0 rounded-md border border-cyan-400/35 bg-cyan-500/10 px-2 py-1 text-[11px] font-semibold text-cyan-100 transition hover:border-cyan-300/70 hover:bg-cyan-400/20"
-            aria-label={`Ask about ${task.title} in Teams chat`}
+            aria-label={`Open chat for ${task.title}`}
           >
             Chat
           </button>
