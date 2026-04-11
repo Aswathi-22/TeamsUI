@@ -5,6 +5,7 @@ import ChatView from '../components/ChatView'
 import CreateTaskModal from '../components/CreateTaskModal'
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal'
 import KanbanBoard from '../components/KanbanBoard'
+import TaskList from '../components/TaskList'
 import ThemeToggle from '../components/ThemeToggle'
 import TimelineView from '../components/TimelineView'
 import { TASK_STATUS_ORDER } from '../constants/taskStatus'
@@ -232,13 +233,16 @@ function Workspace() {
 
           <section className="rounded-3xl border border-slate-700/70 bg-slate-900/45 p-4 md:p-5">
             {activeTab === 'tasks' ? (
-              <KanbanBoard
-                tasksByStatus={tasksByStatus}
-                dependencyTitleMap={dependencyTitleMap}
-                onTaskStatusChange={handleTaskStatusChange}
-                highlightedTaskId={highlightedTaskId}
-                onTaskChatRequest={handleTaskChatRequest}
-              />
+              <div className="space-y-5">
+                <KanbanBoard
+                  tasksByStatus={tasksByStatus}
+                  dependencyTitleMap={dependencyTitleMap}
+                  onTaskStatusChange={handleTaskStatusChange}
+                  highlightedTaskId={highlightedTaskId}
+                  onTaskChatRequest={handleTaskChatRequest}
+                />
+                <TaskList />
+              </div>
             ) : null}
 
             {activeTab === 'calendar' ? <CalendarView tasks={workspaceTasks} /> : null}
