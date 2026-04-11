@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
   "manifestVersion": "1.16",
   "version": "1.0.0",
-  "id": "c1a9b8f2-7d4e-4a8b-9c1f-123456789abc",
-  "packageName": "com.spaceflow.app",
+  "id": "980b72b7-6919-4a75-8077-6b65ed9510d0",
+  "packageName": "https://cad.spaceaiapp.com/lean",
   "developer": {
-    "name": "SpaceFlow",
+    "name": "SpaceLean",
     "websiteUrl": "https://cad.spaceaiapp.com/lean",
     "privacyUrl": "https://cad.spaceaiapp.com/lean",
     "termsOfUseUrl": "https://cad.spaceaiapp.com/lean"
